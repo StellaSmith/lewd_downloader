@@ -1,0 +1,2 @@
+
+domain = "gelbooru.com"
