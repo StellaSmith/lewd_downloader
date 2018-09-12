@@ -16,7 +16,7 @@ def get_max_page(tags):
     page = download_url(url)
     soup = bs4.BeautifulSoup(page, features="html.parser")
 
-    paginator = soup.find("div", attrs={"class", "pagination"})
+    paginator = soup.find("div", attrs={"class": "pagination"})
     last = paginator.find_all("a")[-1]["href"].rsplit("=", 1)[1]
     return int(last)
 

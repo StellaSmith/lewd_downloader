@@ -14,7 +14,16 @@ def format_tags(tags):
 
 
 def get_max_page(tags):
-    raise NotImplementedError("Can't be implemented")
+    url = "https://{}/post/list/{}".format(
+        domain,
+        format_tags(tags)
+    )
+    page = download_url(url)
+    soup = bs4.BeautifulSoup(page, features="html.parser")
+
+    paginator = soup.find("section", attrs={"id": "paginator"})
+    last = paginator.find_all("a")[2]["href"].rsplit("/", 1)[1]
+    return int(last)
 
 
 def download_page(tags, folder, page, amount):
