@@ -23,6 +23,27 @@ def _reporthook(bar, block_count, block_size, total_size):
     else:
         bar.update()
 
+_headers = {
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:62.0) "
+        "Gecko/20100101 Firefox/62.0"
+    )
+}
+
+
+class _FancyURLOpener(urllib.request.FancyURLopener):
+    def http_error_default(self, url, fp, errcode, errmsg, headers):
+        if errcode == 403:
+            print(dir(self))
+            raise ValueError(errcode, errmsg)
+        return super(FixFancyURLOpener, self).http_error_default(
+            url, fp, errcode, errmsg, headers
+        )
+_opener = _FancyURLOpener()
+for v, k in _headers.items():
+    _opener.addheader(v, k)
+del v, k
+
 
 def get_filename(url):
     """
@@ -36,13 +57,14 @@ def retrieve_url(url, filename, silent=False):
     """
     Downloads to disk
     """
+    request = urllib.request.Request(url, headers=_headers)
     if silent:
-        urllib.request.urlretrieve(url, filename)
+        _opener.retrieve(url, filename)
         return
     progress = progressbar.ProgressBar(widgets=_widgets)
-    _widgets[0] = url + " -> " + filename
+    _widgets[0] = url  # + " -> " + filename
     progress.start()
-    urllib.request.urlretrieve(
+    _opener.retrieve(
         url, filename, reporthook=lambda *args: _reporthook(progress, *args)
     )
     progress.finish()
@@ -56,7 +78,8 @@ def download_url(url, silent=True):
     if not silent:
         progress = progressbar.ProgressBar(widgets=_widgets)
         _widgets[0] = url
-    response = urllib.request.urlopen(url)
+    request = urllib.request.Request(url, headers=_headers)
+    response = urllib.request.urlopen(request)
 
     downloaded = b""
     block_size = 8192
