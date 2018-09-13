@@ -1,57 +1,34 @@
-import re
 import os
-import bs4
+import xml.etree.ElementTree
+import math
 from ._utils import *
 from .danbooru import format_tags
 
 domain = "rule34.xxx"
-images_per_page = 42
+images_per_page = 100
+
+_api_url = "https://" + domain + "/index.php?page=dapi&s=post&q=index"
 
 
 def get_max_page(tags):
-    url = "https://{}/index.php?page=post&s=list&tags={}".format(
-        domain,
-        format_tags(tags)
-    )
+    url = _api_url + "&tags={}&limit=0".format(format_tags(tags))
     page = download_url(url)
-    soup = bs4.BeautifulSoup(page, features="html.parser")
-
-    paginator = soup.find("div", attrs={"class": "pagination"})
-    last = paginator.find_all("a")[-1]["href"].rsplit("=", 1)[1]
-    return int(last)
-
-
-def _original_image(soup):
-    sidebar = soup.find("div", {"class": "sidebar"})
-    options = sidebar.findChildren("div")[4]
-    original = options.find_all("li")[2]
-    if original.a["href"] == "#":  # no "resize image"
-        original = options.find_all("li")[1]
-    return original.a["href"]
+    posts = xml.etree.ElementTree.fromstring(page)
+    return math.ceil(int(posts.get("count")) / images_per_page)
 
 
 def download_page(tags, folder, page, amount):
-    url = "https://{}/index.php?page=post&s=list&tags={}&pid={}".format(
-        domain, format_tags(tags), images_per_page * (page - 1)
-    )
+    url = _api_url + "&tags={}&pid={}".format(format_tags(tags), page - 1)
     page = download_url(url, silent=False)
-    soup = bs4.BeautifulSoup(page, features="html.parser")
-    images = soup.find_all("span", {"class": "thumb"})
+    posts = xml.etree.ElementTree.fromstring(page)
     downloaded_amount = 0
-    for image in images:
+    for post in posts:
         if downloaded_amount >= amount:
             break
-        url = "https://" + domain + "/" + image.a["href"]
-        page = download_url(url)
-        soup = bs4.BeautifulSoup(page, features="html.parser")
-        image = soup.find("img", {"id": "image"})
-        if image is None or "/samples/" in image["src"]:
-            image_src = _original_image(soup)
-        else:
-            image_src = urllib.parse.splitquery(image["src"])[0]
+        file_url = post.get("file_url")
         retrieve_url(
-            image_src,
-            os.path.join(folder, get_filename(image_src))
+            file_url,
+            os.path.join(folder, get_filename(file_url))
         )
         downloaded_amount += 1
     return downloaded_amount
