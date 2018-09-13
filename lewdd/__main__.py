@@ -39,7 +39,7 @@ def main(args):
     if args.output is None:
         output = args.domain + " " + " ".join(args.tags)
     else:
-        output = args.output
+        output = args.output[0]
     if args.amount is not None:
         amount = args.amount[0]
     else:
