@@ -2,13 +2,16 @@ import progressbar
 import urllib.request
 import urllib.parse
 import os
+import colorama
 
 _widgets = [
+    colorama.Fore.CYAN,
     "PLACEHOLDER",
+    colorama.Fore.RESET,
     " ",
     progressbar.Percentage(),
     " ",
-    progressbar.Bar(),
+    progressbar.Bar(left="[", right="]"),
     progressbar.FileTransferSpeed(),
     " ",
     progressbar.AdaptiveETA()
@@ -62,7 +65,7 @@ def retrieve_url(url, filename, silent=False):
         _opener.retrieve(url, filename)
         return
     progress = progressbar.ProgressBar(widgets=_widgets)
-    _widgets[0] = url  # + " -> " + filename
+    _widgets[1] = url  # + " -> " + filename
     progress.start()
     _opener.retrieve(
         url, filename, reporthook=lambda *args: _reporthook(progress, *args)
@@ -77,7 +80,7 @@ def download_url(url, silent=True):
 
     if not silent:
         progress = progressbar.ProgressBar(widgets=_widgets)
-        _widgets[0] = url
+        _widgets[1] = url
     request = urllib.request.Request(url, headers=_headers)
     response = urllib.request.urlopen(request)
 

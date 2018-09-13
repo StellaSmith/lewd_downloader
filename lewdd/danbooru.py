@@ -2,6 +2,7 @@ import json
 import urllib.request
 import os
 from ._utils import download_url, retrieve_url
+import colorama
 
 domain = "danbooru.donmai.us"
 images_per_page = 20
@@ -19,8 +20,7 @@ def download_page(tags, folder, page, amount):
     url = "https://{}/posts.json?tags={}&page={}".format(
         domain, format_tags(tags), page
     )
-    print(url)
-    page = download_url(url)
+    page = download_url(url, False)
     posts = json.loads(page)
     downloaded_amount = 0
     for i, post in enumerate(posts):
@@ -28,8 +28,10 @@ def download_page(tags, folder, page, amount):
             break
         if "file_url" not in post:
             print(
+                colorama.Fore.YELLOW +
                 "You need a gold account to see this image.",
-                "(https://{}/posts/{})".format(domain, post["id"])
+                "(https://{}/posts/{})".format(domain, post["id"]) +
+                colorama.Fore.RESET
             )
             continue
         retrieve_url(
