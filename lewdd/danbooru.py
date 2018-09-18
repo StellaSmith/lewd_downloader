@@ -21,7 +21,7 @@ def download_page(tags, folder, page, amount):
         domain, format_tags(tags), page
     )
     page = download_url(url, False)
-    posts = json.loads(page)
+    posts = json.loads(page.decode())
     downloaded_amount = 0
     for i, post in enumerate(posts):
         if downloaded_amount > amount:
